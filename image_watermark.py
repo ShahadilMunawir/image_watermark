@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QFileDialog
 from PyQt5.QtGui import QIcon
 import sys
+from PIL import Image, ImageDraw
 
 
 class AppUi(QMainWindow): # inheriting from the QMainWindow to access all of its method
@@ -63,8 +64,22 @@ class AppUi(QMainWindow): # inheriting from the QMainWindow to access all of its
 
         if file_dialog.exec_() == QFileDialog.Accepted: # Checking if the user selected a file
             selected_files = file_dialog.selectedFiles()
+            i = 0
             for file_name in selected_files: # Looping through the selected image path 
-                print(f"Selected File: {file_name}")
+                source_image = Image.open(file_name)
+                watermark_image = Image.open('setting.png')
+
+                watermark_size = (200, 200)
+                watermark_image = watermark_image.resize(watermark_size, Image.ANTIALIAS)
+
+                result_image = Image.new('RGBA', source_image.size)
+                result_image.paste(source_image, (0, 0))
+
+                position = (result_image.width - watermark_image.width - 30, result_image.height - watermark_image.height - 30)
+                result_image.paste(watermark_image, position, watermark_image)
+
+                result_image.save("result_image"+str(i)+".png")
+                i += 1
 
 
 
