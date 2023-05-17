@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QFileDialog, QLabel
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QPoint
 import sys
 from PIL import Image, ImageDraw
 
@@ -23,6 +24,9 @@ class AppUi(QMainWindow): # inheriting from the QMainWindow to access all of its
             QPushButton:hover {
                 background-color: #727272;
             }
+            QLabel {
+                color: white;
+            }
         """) # Stylesheet
 
         self.ui() # Calling the ui methond to render all the ui elements
@@ -36,9 +40,19 @@ class AppUi(QMainWindow): # inheriting from the QMainWindow to access all of its
         self.uploadBtn = QPushButton(self) # Creating a button fot uploading images
         self.uploadBtn.setText("Upload Image")
 
-        self.uploadBtn.clicked.connect(self.open_file_dialog) # calling the file open methond when the button is clicked
+        self.selectedFileLable = QLabel(self)
 
+        self.uploadWatermark = QPushButton(self)
+        self.uploadWatermark.setText("Upload WaterMark")
+        self.uploadWatermark.adjustSize()
+
+        self.watermarkLabel = QLabel(self)
+
+        self.uploadBtn.clicked.connect(self.open_file_upload) # calling the file open methond when the button is clicked
+
+        self.uploadWatermark.clicked.connect(self.open_file_watermark)
         self.UiPosition() # Made a seperate function in which all the ui elements location is adjusted. So i can call this function when ever the application resizes and the fucntion will update every elements possition accordingly.
+
 
     def UiPosition(self):
         self.halfWidth = round(self.width()/2) # to get the half of the window width. Rounding it to beacuse the move method only takes int as a argument and some times the half width return a float
@@ -49,37 +63,56 @@ class AppUi(QMainWindow): # inheriting from the QMainWindow to access all of its
         uploadBtnHalfHieght = round(self.uploadBtn.height()/2)
         self.uploadBtn.move(self.halfWidth - uploadBtnHalfWith, self.halfheight - uploadBtnHalfHieght) # Adjusting the upload button to the center of the screen
 
+        self.selectedFileLable.move(self.uploadBtn.pos() + QPoint(110, 5) )
+
+        watermarkBtnHalfWidth = round(self.uploadWatermark.width()/2)
+        self.uploadWatermark.move(self.halfWidth - watermarkBtnHalfWidth, self.uploadBtn.pos().y() + 100)
+
+        self.watermarkLabel.move(self.uploadWatermark.pos() + QPoint(130, 2))
+
     def resizeEvent(self, event): # This function will be called whenever the window is resized.
         self.setGeometry(0, 0, self.width(), self.height())
         self.UiPosition()
 
  
 
-    def open_file_dialog(self):
+    def open_file_upload(self):
+
+        self.selectedFileNameArray = [] 
+
+
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle('Open Files')
-        file_dialog.setNameFilter('Images (*.png *.jpg);;All Files (*)') # Fileters the input files
+        file_dialog.setNameFilter('Images (*.png *.jpg)') # Fileters the input files
         file_dialog.setFileMode(QFileDialog.ExistingFiles) # This line enables multi selection of files
 
 
         if file_dialog.exec_() == QFileDialog.Accepted: # Checking if the user selected a file
             selected_files = file_dialog.selectedFiles()
-            i = 0
-            for file_name in selected_files: # Looping through the selected image path 
-                source_image = Image.open(file_name)
-                watermark_image = Image.open('setting.png')
+            
+            for files in selected_files:
+                filename = files.split("/").pop()
+                self.selectedFileNameArray.append(filename)
+            if(len(self.selectedFileNameArray) - 1 == 0):
+                self.selectedFileLable.setText(self.selectedFileNameArray[0])
+                self.selectedFileLable.adjustSize()
+            else:
+                self.selectedFileLable.setText("{} & {} more".format(self.selectedFileNameArray[0], len(self.selectedFileNameArray) - 1))
+                self.selectedFileLable.adjustSize()
 
-                watermark_size = (200, 200)
-                watermark_image = watermark_image.resize(watermark_size, Image.ANTIALIAS)
+    def open_file_watermark(self):
 
-                result_image = Image.new('RGBA', source_image.size)
-                result_image.paste(source_image, (0, 0))
+        self.selectedWatermark = []
 
-                position = (result_image.width - watermark_image.width - 30, result_image.height - watermark_image.height - 30)
-                result_image.paste(watermark_image, position, watermark_image)
+        file_watermark = QFileDialog(self)
+        file_watermark.setWindowTitle("Select an image for watermaker")
+        file_watermark.setNameFilter('Images (*.png *.jpg)')
 
-                result_image.save("result_image"+str(i)+".png")
-                i += 1
+        if file_watermark.exec_() == QFileDialog.Accepted:
+            selected_watermark = file_watermark.selectedFiles()
+
+            self.watermarkLabel.setText(selected_watermark[0].split("/").pop())
+            self.watermarkLabel.adjustSize()
 
 
 
