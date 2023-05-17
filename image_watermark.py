@@ -46,17 +46,25 @@ class AppUi(QMainWindow): # inheriting from the QMainWindow to access all of its
 
         uploadBtnHalfWith = round(self.uploadBtn.width()/2)
         uploadBtnHalfHieght = round(self.uploadBtn.height()/2)
-        self.uploadBtn.move(self.halfWidth - uploadBtnHalfWith, self.halfheight - uploadBtnHalfHieght)
+        self.uploadBtn.move(self.halfWidth - uploadBtnHalfWith, self.halfheight - uploadBtnHalfHieght) # Adjusting the upload button to the center of the screen
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event): # This function will be called whenever the window is resized.
         self.setGeometry(0, 0, self.width(), self.height())
         self.UiPosition()
 
+ 
+
     def open_file_dialog(self):
-        file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self, "Open File")
-        if file_path:
-            print("Selected file:", file_path)
+        file_dialog = QFileDialog(self)
+        file_dialog.setWindowTitle('Open Files')
+        file_dialog.setNameFilter('Images (*.png *.jpg);;All Files (*)') # Fileters the input files
+        file_dialog.setFileMode(QFileDialog.ExistingFiles) # This line enables multi selection of files
+
+
+        if file_dialog.exec_() == QFileDialog.Accepted: # Checking if the user selected a file
+            selected_files = file_dialog.selectedFiles()
+            for file_name in selected_files: # Looping through the selected image path 
+                print(f"Selected File: {file_name}")
 
 
 
